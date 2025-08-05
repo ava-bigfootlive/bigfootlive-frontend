@@ -1,0 +1,276 @@
+/* BigfootLive Custom Theme - Generated with tweakcn inspiration */
+
+@layer base {
+  /* Dark Theme - Professional Streaming Platform */
+  :root {
+    /* Background Colors - Deep blacks for OLED-friendly design */
+    --background: 0 0% 4%;        /* #0a0a0a - True black */
+    --foreground: 0 0% 100%;      /* #ffffff - Pure white text */
+    
+    /* Card & Container Colors */
+    --card: 0 0% 7%;              /* #121212 - Slightly elevated */
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 100%;
+    
+    /* Primary - Purple gradient for streaming vibes */
+    --primary: 271 91% 65%;       /* #9333ea - Vivid purple */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Muted surfaces */
+    --secondary: 0 0% 12%;        /* #1f1f1f */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted - For subtle elements */
+    --muted: 0 0% 15%;           /* #262626 */
+    --muted-foreground: 0 0% 78%; /* #c7c7c7 - Improved contrast ≥70% */
+    
+    /* Accent - Pink/Magenta for highlights */
+    --accent: 328 85% 70%;        /* #ec4899 - Hot pink */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Status Colors */
+    --destructive: 0 84% 60%;     /* #ef4444 - Red */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Semantic Status Colors */
+    --success: 142 71% 45%;       /* #22c55e - Green */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;        /* #fbbf24 - Yellow/Orange */
+    --warning-foreground: 0 0% 0%;
+    --info: 217 91% 60%;          /* #3b82f6 - Blue */
+    --info-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 0 0% 15%;           /* #262626 */
+    --input: 0 0% 12%;            /* #1f1f1f */
+    --ring: 271 91% 65%;          /* Purple focus ring */
+    
+    /* Live Streaming Specific */
+    --live: 0 100% 50%;           /* #ff0000 - Bright red for LIVE */
+    --live-glow: 0 100% 60%;      /* For pulsing effect */
+    --offline: 0 0% 45%;          /* #737373 - Gray for offline */
+    --scheduled: 45 100% 51%;     /* #fbbf24 - Yellow for scheduled */
+    --viewer-count: 142 71% 45%;  /* #22c55e - Green */
+    --stream-quality: 217 91% 60%; /* #3b82f6 - Blue */
+    
+    /* Chart Colors */
+    --chart-1: 271 91% 65%;       /* Purple */
+    --chart-2: 328 85% 70%;       /* Pink */
+    --chart-3: 217 91% 60%;       /* Blue */
+    --chart-4: 158 64% 52%;       /* Teal */
+    --chart-5: 38 92% 50%;        /* Orange */
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(271 91% 65%), hsl(328 85% 70%));
+    --gradient-live: linear-gradient(135deg, hsl(0 100% 50%), hsl(15 100% 60%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 52%));
+    
+    /* Radius */
+    --radius: 0.5rem;
+  }
+  
+  /* Light Theme - Clean & Professional */
+  .light {
+    /* Background Colors - Clean whites */
+    --background: 0 0% 100%;      /* #ffffff */
+    --foreground: 0 0% 3.9%;      /* #0a0a0a */
+    
+    /* Card & Container Colors */
+    --card: 0 0% 100%;            /* #ffffff */
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    
+    /* Primary - Purple (slightly adjusted for light mode) */
+    --primary: 271 91% 55%;       /* Darker purple for contrast */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Light grays */
+    --secondary: 0 0% 96%;        /* #f5f5f5 */
+    --secondary-foreground: 0 0% 9%;
+    
+    /* Muted - For subtle elements */
+    --muted: 0 0% 96%;            /* #f5f5f5 */
+    --muted-foreground: 0 0% 25%; /* #404040 - Improved contrast ≥70% */
+    
+    /* Accent - Pink (adjusted for light mode) */
+    --accent: 328 85% 60%;        /* Slightly darker pink */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Status Colors */
+    --destructive: 0 84% 60%;     /* #ef4444 */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Semantic Status Colors */
+    --success: 142 71% 35%;       /* Darker green for light mode */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 45%;        /* Darker yellow/orange for light mode */
+    --warning-foreground: 0 0% 0%;
+    --info: 217 91% 50%;          /* Darker blue for light mode */
+    --info-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 0 0% 89%;           /* #e3e3e3 */
+    --input: 0 0% 89%;            /* #e3e3e3 */
+    --ring: 271 91% 55%;          /* Purple focus ring */
+    
+    /* Live Streaming Specific */
+    --live: 0 100% 50%;           /* #ff0000 - Bright red for LIVE */
+    --live-glow: 0 100% 40%;      /* Darker for light mode */
+    --offline: 0 0% 45%;          /* #737373 - Gray for offline */
+    --scheduled: 45 100% 45%;     /* Darker yellow for scheduled in light mode */
+    --viewer-count: 142 71% 35%;  /* Darker green */
+    --stream-quality: 217 91% 50%; /* Darker blue */
+    
+    /* Chart Colors */
+    --chart-1: 271 91% 55%;       /* Purple */
+    --chart-2: 328 85% 60%;       /* Pink */
+    --chart-3: 217 91% 50%;       /* Blue */
+    --chart-4: 158 64% 42%;       /* Teal */
+    --chart-5: 38 92% 45%;        /* Orange */
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(271 91% 55%), hsl(328 85% 60%));
+    --gradient-live: linear-gradient(135deg, hsl(0 100% 50%), hsl(15 100% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 35%), hsl(158 64% 42%));
+  }
+}
+
+/* Custom utility classes for streaming platform */
+@layer utilities {
+  /* Live indicator pulse animation */
+  @keyframes live-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
+  }
+  
+  .live-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .live-indicator::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 9999px;
+    background-color: hsl(var(--live));
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+    background-clip: text;
+    color: transparent;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    backdrop-filter: blur(16px);
+    background-color: hsl(var(--background) / 0.6);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+  
+  /* Neon glow effects */
+  .neon-glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.5),
+                0 0 40px hsl(var(--primary) / 0.3),
+                0 0 60px hsl(var(--primary) / 0.1);
+  }
+  
+  .neon-glow-live {
+    box-shadow: 0 0 20px hsl(var(--live) / 0.8),
+                0 0 40px hsl(var(--live) / 0.5),
+                0 0 60px hsl(var(--live) / 0.3);
+  }
+  
+  /* Streaming card hover effect */
+  .stream-card-hover {
+    transition: all 300ms;
+  }
+  
+  .stream-card-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+  
+  /* Video quality badges */
+  .quality-badge-4k {
+    background: linear-gradient(to right, #9333ea, #ec4899);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  .quality-badge-hd {
+    background: linear-gradient(to right, #3b82f6, #06b6d4);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  .quality-badge-sd {
+    background: linear-gradient(to right, #4b5563, #374151);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  /* Viewer count animation */
+  @keyframes viewer-count-update {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  .viewer-count-animate {
+    animation: viewer-count-update 0.3s ease-out;
+  }
+  
+  /* Blob animation for auth page */
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+  
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+

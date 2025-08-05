@@ -1,0 +1,9 @@
+/* Chart colors for visualization components */
+.dark {
+  /* Chart colors with better contrast */
+  --chart-1: 271 91% 65%; /* purple */
+  --chart-2: 328 85% 70%; /* pink */
+  --chart-3: 217 91% 60%; /* blue */
+  --chart-4: 158 64% 52%; /* green */
+  --chart-5: 38 92% 50%; /* orange */
+}

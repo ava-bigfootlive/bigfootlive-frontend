@@ -1,0 +1,136 @@
+
+:root {
+  --background: 222 84% 5%;
+  --foreground: 213 31% 91%;
+  --muted: 223 47% 11%;
+  --muted-foreground: 215.4 16.3% 78%;
+  --popover: 224 71% 4%;
+  --popover-foreground: 215 20.2% 65.1%;
+  --border: 216 34% 17%;
+  --input: 216 34% 17%;
+  --card: 224 71% 4%;
+  --card-foreground: 213 31% 91%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 222.2 84% 4.9%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 216 34% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 216 34% 17%;
+  --radius: 0.5rem;
+  
+  /* Streaming-specific colors */
+  --live-indicator: 0 84% 60%;
+  --viewer-count: 142 69% 58%;
+  --chat-background: 224 71% 4%;
+  --video-controls: 215 28% 17%;
+}
+
+.dark {
+  --background: 220 13% 8%;
+  --foreground: 0 0% 95%;
+  --muted: 220 13% 15%;
+  --muted-foreground: 220 9% 46%;
+  --popover: 220 13% 7%;
+  --popover-foreground: 0 0% 100%;
+  --border: 220 13% 15%;
+  --input: 220 13% 12%;
+  --card: 220 13% 7%;
+  --card-foreground: 0 0% 100%;
+  --primary: 271 91% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 13% 12%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 328 85% 70%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --ring: 271 91% 35%;
+}
+
+/* Force better contrast for accessibility - override inline styles */
+html.dark,
+html.dark *,
+.dark,
+.dark * {
+  --primary: 271 91% 35% !important;
+  --ring: 271 91% 35% !important;
+}
+
+
+
+/* Streaming Platform Specific Styles */
+.live-indicator {
+  @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
+  background-color: hsl(var(--live-indicator));
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.viewer-count {
+  @apply inline-flex items-center text-sm font-medium;
+  color: hsl(var(--viewer-count));
+}
+
+.video-container {
+  @apply relative aspect-video bg-black rounded-lg overflow-hidden;
+}
+
+.video-controls {
+  @apply absolute bottom-0 left-0 right-0 p-4;
+  background: linear-gradient(transparent, hsl(var(--video-controls)));
+}
+
+.chat-container {
+  @apply h-full border-l;
+  background-color: hsl(var(--chat-background));
+}
+
+.stream-card {
+  @apply rounded-lg border bg-card p-4 transition-all hover:shadow-lg;
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.dashboard-grid {
+  @apply grid gap-6;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.metric-card {
+  @apply rounded-lg border bg-card p-6 text-center;
+  .metric-value {
+    @apply text-3xl font-bold;
+  }
+  .metric-label {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+

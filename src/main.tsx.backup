@@ -1,0 +1,34 @@
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary'
+
+console.log('BigfootLive: Starting app...');
+console.log('Environment:', {
+  API_URL: import.meta.env.VITE_API_URL,
+  USE_MOCK: import.meta.env.VITE_USE_MOCK_API,
+  COGNITO_POOL: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+  MODE: import.meta.env.MODE
+});
+
+try {
+  const root = document.getElementById('root');
+  console.log('Root element:', root);
+  
+  if (!root) {
+    throw new Error('Root element not found');
+  }
+  
+  createRoot(root).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+  console.log('BigfootLive: App rendered successfully');
+} catch (error) {
+  console.error('BigfootLive: Failed to start app:', error);
+  document.body.innerHTML = `<div style="color: red; padding: 20px;">Failed to start app: ${error}</div>`;
+}

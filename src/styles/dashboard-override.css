@@ -1,0 +1,177 @@
+/* Dashboard Override Styles - Direct Application */
+
+/* Force sidebar styling */
+.sidebar,
+aside[class*="sidebar"] {
+  background: hsl(var(--card));
+  backdrop-filter: blur(12px);
+  border-right: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 30%);
+  width: 250px;
+  min-width: 250px;
+}
+
+/* Sidebar navigation */
+.sidebar nav,
+.sidebar-nav {
+  padding: 12px;
+}
+
+.sidebar a,
+.sidebar button[role="button"] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+  color: hsl(var(--muted-foreground));
+}
+
+.sidebar a:hover,
+.sidebar button[role="button"]:hover {
+  background: hsl(var(--accent) / 10%);
+  color: hsl(var(--foreground) / 90%);
+  transform: translateX(2px);
+}
+
+.sidebar a[data-active="true"],
+.sidebar a.active,
+.sidebar button[aria-selected="true"] {
+  background: hsl(var(--accent) / 15%);
+  color: hsl(var(--accent-foreground));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+}
+
+/* Main header */
+header,
+.main-header {
+  background: hsl(var(--card));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 10%);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 64px;
+}
+
+/* Content area */
+.main-content,
+main {
+  background: hsl(var(--background));
+  min-height: 100vh;
+}
+
+.content-wrapper > div:first-child {
+  padding: 24px;
+}
+
+/* Cards and sections */
+.card,
+[class*="card"] {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 20%);
+  margin-bottom: 16px;
+}
+
+/* Section headers */
+h2, h3 {
+  margin-bottom: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* Lists spacing */
+ul, ol {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+li {
+  padding: 12px 0 !important;
+  border-bottom: 1px solid rgb(255 255 255 / 5%) !important;
+}
+
+li:last-child {
+  border-bottom: none !important;
+}
+
+/* Button enhancements */
+button {
+  transition: all 0.2s ease !important;
+}
+
+button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 30%) !important;
+}
+
+/* Dropdown styling */
+.dropdown-menu,
+[role="menu"] {
+  background: hsl(var(--popover));
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 30%);
+}
+
+/* Ensure proper layout */
+.dashboard-layout {
+  display: flex !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.dashboard-layout > div:last-child {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Scrollable content */
+main {
+  flex: 1 !important;
+  overflow: hidden auto !important;
+}
+
+/* Visual hierarchy with spacing */
+.space-y-4 > * + * {
+  margin-top: 16px !important;
+}
+
+.space-y-6 > * + * {
+  margin-top: 24px !important;
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6 !important;
+  pointer-events: none !important;
+}
+
+/* Responsive adjustments */
+@media (width <= 768px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+    position: fixed !important;
+    height: 100vh !important;
+    z-index: 50 !important;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+}

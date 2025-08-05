@@ -1,0 +1,36 @@
+{
+  "name": "BigfootLive Light",
+  "type": "light",
+  "colors": {
+    "background": "0 0% 100%",
+    "foreground": "0 0% 4%",
+    "card": "0 0% 100%",
+    "card-foreground": "0 0% 4%",
+    "popover": "0 0% 100%",
+    "popover-foreground": "0 0% 4%",
+    "primary": "263 90% 58%",
+    "primary-foreground": "0 0% 100%",
+    "secondary": "0 0% 96%",
+    "secondary-foreground": "0 0% 4%",
+    "muted": "0 0% 96%",
+    "muted-foreground": "0 0% 45%",
+    "accent": "338 71% 51%",
+    "accent-foreground": "0 0% 100%",
+    "destructive": "0 84% 60%",
+    "destructive-foreground": "0 0% 100%",
+    "border": "0 0% 89%",
+    "input": "0 0% 89%",
+    "ring": "263 90% 58%"
+  },
+  "radius": "0.5rem",
+  "hexColors": {
+    "background": "#ffffff",
+    "foreground": "#0a0a0a",
+    "card": "#ffffff",
+    "primary": "#7c3aed",
+    "secondary": "#f5f5f5",
+    "muted": "#f5f5f5",
+    "accent": "#db2777",
+    "border": "#e3e3e3"
+  }
+}
