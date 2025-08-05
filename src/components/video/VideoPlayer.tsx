@@ -151,42 +151,51 @@ export function VideoPlayer({
     }
   }, [src, autoPlay]);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
     if (isPlaying) {
       video.pause();
     } else {
-      video.play();
+      video.play().catch(() => {
+        // Handle autoplay failure gracefully
+        setIsPlaying(false);
+      });
     }
-  };
+  }, [isPlaying]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
     video.muted = !isMuted;
     setIsMuted(!isMuted);
-  };
+  }, [isMuted]);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     const container = videoRef.current?.parentElement;
     if (!container) return;
 
     if (!isFullscreen) {
       if (container.requestFullscreen) {
-        container.requestFullscreen();
+        container.requestFullscreen().catch(() => {
+          // Handle fullscreen request failure
+          console.warn('Failed to enter fullscreen mode');
+        });
       }
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {
+          // Handle fullscreen exit failure
+          console.warn('Failed to exit fullscreen mode');
+        });
       }
     }
     setIsFullscreen(!isFullscreen);
-  };
+  }, [isFullscreen]);
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -194,16 +203,16 @@ export function VideoPlayer({
     video.volume = newVolume;
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-  };
+  }, []);
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const video = videoRef.current;
     if (!video) return;
 
     const newTime = parseFloat(e.target.value);
     video.currentTime = newTime;
     setCurrentTime(newTime);
-  };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -259,7 +268,7 @@ export function VideoPlayer({
   }, [togglePlay, toggleMute, toggleFullscreen, seekBy]);
 
   return (
-    <div className={cn('relative bg-black rounded-lg overflow-hidden group video-player-container', className)} tabIndex={0}>
+    <div className={cn('relative bg-black rounded-lg overflow-hidden group video-player-container', className)} tabIndex={0} role="application" aria-label="Video player">
       <video
         ref={videoRef}
         className="w-full h-full"
@@ -306,6 +315,12 @@ export function VideoPlayer({
               style={{
                 background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, #4b5563 ${(currentTime / duration) * 100}%, #4b5563 100%)`
               }}
+              role="slider"
+              aria-label="Video progress"
+              aria-valuemin={0}
+              aria-valuemax={duration || 0}
+              aria-valuenow={currentTime}
+              aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
             />
             <div className="flex justify-between text-xs text-white mt-1">
               <span>{formatTime(currentTime)}</span>
@@ -321,6 +336,7 @@ export function VideoPlayer({
                 variant="ghost"
                 className="text-white hover:bg-white/20"
                 onClick={togglePlay}
+                aria-label={isPlaying ? 'Pause video' : 'Play video'}
               >
                 {isPlaying ? (
                   <Pause className="h-5 w-5" />
@@ -335,6 +351,7 @@ export function VideoPlayer({
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={toggleMute}
+                  aria-label={isMuted ? 'Unmute video' : 'Mute video'}
                 >
                   {isMuted ? (
                     <VolumeX className="h-5 w-5" />
@@ -350,6 +367,12 @@ export function VideoPlayer({
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
                   className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                  role="slider"
+                  aria-label="Volume control"
+                  aria-valuemin={0}
+                  aria-valuemax={1}
+                  aria-valuenow={isMuted ? 0 : volume}
+                  aria-valuetext={`Volume ${Math.round((isMuted ? 0 : volume) * 100)}%`}
                 />
               </div>
             </div>
@@ -362,6 +385,7 @@ export function VideoPlayer({
                     size="icon"
                     variant="ghost"
                     className="text-white hover:bg-white/20"
+                    aria-label="Video settings"
                   >
                     <Settings className="h-5 w-5" />
                   </Button>
@@ -456,6 +480,7 @@ export function VideoPlayer({
                 variant="ghost"
                 className="text-white hover:bg-white/20"
                 onClick={toggleFullscreen}
+                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               >
                 {isFullscreen ? (
                   <Minimize className="h-5 w-5" />

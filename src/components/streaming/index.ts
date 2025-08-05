@@ -2,5 +2,8 @@ export { StreamSetup } from './StreamSetup';
 export { StreamControlCenter } from './StreamControlCenter';
 export { StreamViewer } from './StreamViewer';
 export { StreamingOverlays } from './StreamingOverlays';
+export { StreamManager } from './StreamManager';
+export { StreamDashboard } from './StreamDashboard';
+export { StreamerControls } from './StreamerControls';
 export { VideoPlayerControls } from '../video/VideoPlayerControls';
 export { DonationAlert } from '../notifications/NotificationDropdown';

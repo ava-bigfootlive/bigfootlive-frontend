@@ -16,6 +16,7 @@ const mainNavigation = [
   { name: 'Live Control Center', href: '/tenant/live-control', icon: Radio, badge: { text: 'LIVE', variant: 'destructive' as const } },
   { name: 'Content Library', href: '/tenant/content', icon: Video, badge: null },
   { name: 'Analytics Hub', href: '/tenant/analytics', icon: BarChart3, badge: null },
+  { name: 'Analytics Dashboard', href: '/dashboard/analytics-dashboard', icon: BarChart3, badge: { text: 'NEW', variant: 'secondary' as const } },
   { name: 'Interactive Features', href: '/tenant/interactive', icon: Users, badge: null },
 ];
 

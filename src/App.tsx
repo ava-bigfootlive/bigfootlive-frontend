@@ -7,6 +7,7 @@ import StreamsPage from '@/pages/StreamsEnhanced';
 import StreamView from '@/pages/StreamView';
 import AnalyticsPage from '@/pages/AnalyticsEnhanced';
 import AnalyticsHub from '@/pages/tenant/AnalyticsHub';
+import AnalyticsDashboardPage from '@/pages/AnalyticsDashboardPage';
 import AudiencePage from '@/pages/Audience';
 import SettingsPage from '@/pages/SettingsEnhanced';
 import NewStreamPage from '@/pages/NewStream';
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="streams/new" element={<NewStreamPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="analytics-hub" element={<AnalyticsHub />} />
+            <Route path="analytics-dashboard" element={<AnalyticsDashboardPage />} />
             <Route path="audience" element={<AudiencePage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,44 +13,141 @@ import {
   ArrowUp,
   ArrowDown,
   Calendar,
-  Play
+  Play,
+  Activity,
+  AlertCircle,
+  CheckCircle,
+  Zap,
+  Settings,
+  ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { streamingService, type ContainerStatus } from '@/services/streaming';
+import { analyticsService } from '@/services/analyticsService';
+import { useToast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
+  const [liveStreams, setLiveStreams] = useState<ContainerStatus[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch real streaming and analytics data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Get analytics data for today
+        const today = new Date();
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        const filter = {
+          dateRange: { start: yesterday, end: today }
+        };
+        
+        const analytics = await analyticsService.getHistoricalAnalytics('default-channel', filter);
+        setAnalyticsData(analytics);
+        
+        // Mock active containers data (in real app, would fetch from API)
+        const mockLiveStreams: ContainerStatus[] = [
+          {
+            container_id: 'container_1',
+            status: 'running',
+            health: 'healthy',
+            uptime: '02:15:30',
+            metrics: {
+              cpu_usage: '35%',
+              memory_usage: '1.2GB',
+              network_in: '12.5 MB/s',
+              network_out: '45.2 MB/s',
+              active_connections: '5234'
+            }
+          },
+          {
+            container_id: 'container_2', 
+            status: 'running',
+            health: 'healthy',
+            uptime: '00:45:12',
+            metrics: {
+              cpu_usage: '28%',
+              memory_usage: '896MB',
+              network_in: '8.1 MB/s',
+              network_out: '28.7 MB/s',
+              active_connections: '1823'
+            }
+          },
+          {
+            container_id: 'container_3',
+            status: 'running', 
+            health: 'healthy',
+            uptime: '01:30:45',
+            metrics: {
+              cpu_usage: '42%',
+              memory_usage: '1.8GB',
+              network_in: '18.3 MB/s',
+              network_out: '67.1 MB/s',
+              active_connections: '8421'
+            }
+          }
+        ];
+        setLiveStreams(mockLiveStreams);
+        
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        toast({
+          title: 'Error loading dashboard',
+          description: 'Failed to load real-time data. Showing sample data.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
+    
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, [toast]);
+  
+  // Calculate real metrics from data
+  const totalViewers = liveStreams.reduce((sum, stream) => sum + parseInt(stream.metrics.active_connections), 0);
+  const activeStreamCount = liveStreams.filter(s => s.status === 'running').length;
+  const todayRevenue = analyticsData?.aggregated?.totalRevenue || 0;
+  const avgWatchTime = analyticsData?.aggregated?.averageWatchTime || 0;
+  
   const metrics = [
     {
-      title: 'Total Viewers',
-      value: '23,456',
+      title: 'Live Viewers',
+      value: totalViewers.toLocaleString(),
       change: '+12.5%',
-      trend: 'up',
+      trend: 'up' as const,
       icon: Users,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
     },
     {
       title: 'Active Streams',
-      value: '8',
-      change: '+2',
-      trend: 'up',
+      value: activeStreamCount.toString(),
+      change: `+${activeStreamCount}`,
+      trend: 'up' as const,
       icon: Radio,
       color: 'text-red-500',
       bgColor: 'bg-red-500/10',
     },
     {
       title: 'Revenue Today',
-      value: '$12,345',
+      value: `$${todayRevenue.toLocaleString()}`,
       change: '+18.2%',
-      trend: 'up',
+      trend: 'up' as const,
       icon: DollarSign,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
     {
       title: 'Avg Watch Time',
-      value: '42 min',
+      value: `${Math.round(avgWatchTime)} min`,
       change: '-5.1%',
-      trend: 'down',
+      trend: 'down' as const,
       icon: Clock,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
@@ -57,10 +155,10 @@ const Dashboard = () => {
   ];
 
   const activeStreams = [
-    { id: 1, title: 'Gaming Marathon 2024', viewers: 5234, duration: '2h 15m', status: 'live' },
-    { id: 2, title: 'Tech Talk Tuesday', viewers: 1823, duration: '45m', status: 'live' },
-    { id: 3, title: 'Music Concert Live', viewers: 8421, duration: '1h 30m', status: 'live' },
-  ];
+    { id: 1, title: 'Gaming Marathon 2024', viewers: 5234, duration: '2h 15m', status: 'live', container: liveStreams[0] },
+    { id: 2, title: 'Tech Talk Tuesday', viewers: 1823, duration: '45m', status: 'live', container: liveStreams[1] },
+    { id: 3, title: 'Music Concert Live', viewers: 8421, duration: '1h 30m', status: 'live', container: liveStreams[2] },
+  ].filter(stream => stream.container); // Only show streams with active containers
 
   const upcomingEvents = [
     { id: 1, title: 'Developer Conference', time: '2:00 PM', date: 'Today' },
@@ -143,27 +241,43 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {activeStreams.map((stream) => (
-              <div key={stream.id} className="panel p-4 hover-glow cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">{stream.title}</h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {stream.viewers.toLocaleString()} viewers
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {stream.duration}
-                      </span>
+              <Link key={stream.id} to={`/tenant/live-control/stream/${stream.container?.container_id}`}>
+                <div className="panel p-4 hover-glow cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="font-medium">{stream.title}</h4>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {parseInt(stream.container?.metrics.active_connections || '0').toLocaleString()} viewers
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {stream.container?.uptime}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Activity className="h-3 w-3" />
+                          {stream.container?.metrics.cpu_usage} CPU
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        {stream.container?.health === 'healthy' ? (
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-yellow-500" />
+                        )}
+                        <span className="text-xs capitalize">{stream.container?.health}</span>
+                      </div>
+                      <Badge className="status-live">
+                        <Radio className="h-3 w-3 mr-1" />
+                        LIVE
+                      </Badge>
                     </div>
                   </div>
-                  <Badge className="status-live">
-                    <Radio className="h-3 w-3 mr-1" />
-                    LIVE
-                  </Badge>
                 </div>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>

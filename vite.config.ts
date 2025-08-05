@@ -15,9 +15,39 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'charts';
+            }
+            if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+              return 'ui';
+            }
+            if (id.includes('axios') || id.includes('zod') || id.includes('react-hook-form')) {
+              return 'utils';
+            }
+            return 'vendor';
+          }
+          
+          // Analytics chunks
+          if (id.includes('/Analytics/')) {
+            if (id.includes('Dashboard')) {
+              return 'analytics-dashboards';
+            }
+            if (id.includes('RealTimeMonitor')) {
+              return 'analytics-realtime';
+            }
+            return 'analytics';
+          }
+          
+          // Main app chunk
+          if (id.includes('/src/')) {
+            return 'app';
+          }
         },
       },
     },

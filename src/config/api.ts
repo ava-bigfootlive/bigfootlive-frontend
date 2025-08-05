@@ -37,7 +37,13 @@ export const API_PATHS = {
     overview: '/analytics/overview',
     viewership: '/analytics/viewership',
     audience: '/analytics/audience',
-    streams: (id: string) => `/analytics/streams/${id}`
+    streams: (id: string) => `/analytics/streams/${id}`,
+    comprehensive: (streamId: string) => `/analytics/comprehensive/${streamId}`,
+    historical: (channelId: string) => `/analytics/historical/${channelId}`,
+    realTime: (streamId: string) => `/analytics/real-time/${streamId}`,
+    goals: (channelId: string) => `/analytics/goals/${channelId}`,
+    alerts: (channelId: string) => `/analytics/alerts/${channelId}`,
+    alertAck: (alertId: string) => `/analytics/alerts/${alertId}/acknowledge`
   },
   
   // User endpoints
@@ -85,6 +91,23 @@ export const buildApiUrl = (path: string): string => {
   return `${API_URL}${normalizedPath}`;
 };
 
+// API Configuration constants
+export const API_CONFIG = {
+  TIMEOUTS: {
+    DEFAULT: 10000, // 10 seconds
+    REAL_TIME: 5000, // 5 seconds for real-time data
+  },
+  RETRY: {
+    MAX_ATTEMPTS: 3,
+    DELAY: 1000, // 1 second base delay
+    BACKOFF_MULTIPLIER: 2, // Exponential backoff
+  },
+  CACHE: {
+    DEFAULT_TTL: 5 * 60 * 1000, // 5 minutes
+    REAL_TIME_TTL: 30 * 1000, // 30 seconds
+  }
+};
+
 // Helper function to get auth headers
 export const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('idToken');
@@ -92,4 +115,30 @@ export const getAuthHeaders = (): HeadersInit => {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
   };
+};
+
+// Helper function for retry logic with exponential backoff
+export const withRetry = async <T>(
+  fn: () => Promise<T>,
+  maxAttempts: number = API_CONFIG.RETRY.MAX_ATTEMPTS
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt === maxAttempts) {
+        throw lastError;
+      }
+      
+      // Exponential backoff delay
+      const delay = API_CONFIG.RETRY.DELAY * Math.pow(API_CONFIG.RETRY.BACKOFF_MULTIPLIER, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
 };
