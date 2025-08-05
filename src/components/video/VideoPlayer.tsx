@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { cn } from '@/lib/utils';
 import { 
@@ -9,9 +9,21 @@ import {
   Maximize,
   Minimize,
   Settings,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface VideoPlayerProps {
   src: string;
@@ -20,6 +32,14 @@ interface VideoPlayerProps {
   autoPlay?: boolean;
   muted?: boolean;
 }
+
+interface QualityLevel {
+  height: number;
+  bitrate: number;
+  name: string;
+}
+
+const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 export function VideoPlayer({ 
   src, 
@@ -38,6 +58,23 @@ export function VideoPlayer({
   const [volume, setVolume] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
+  const [currentQuality, setCurrentQuality] = useState<number>(-1); // -1 for auto
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  const handleQualityChange = useCallback((level: number) => {
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = level;
+      setCurrentQuality(level);
+    }
+  }, []);
+
+  const handlePlaybackRateChange = useCallback((rate: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = rate;
+      setPlaybackRate(rate);
+    }
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -72,14 +109,32 @@ export function VideoPlayer({
         }
       });
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         setIsLoading(false);
+        
+        // Extract quality levels from HLS manifest
+        const levels: QualityLevel[] = data.levels.map((level, index) => {
+          return {
+            height: level.height,
+            bitrate: level.bitrate,
+            name: level.height ? `${level.height}p` : `Level ${index}`
+          };
+        });
+        
+        setQualityLevels(levels);
+        setCurrentQuality(hls.currentLevel); // -1 is auto
+        
         if (autoPlay) {
           video.play().catch(() => {
             // Autoplay blocked
             setIsPlaying(false);
           });
         }
+      });
+      
+      // Handle level switching events
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        setCurrentQuality(data.level);
       });
 
       return () => {
@@ -156,8 +211,55 @@ export function VideoPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const seekBy = useCallback((seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const newTime = Math.max(0, Math.min(duration, video.currentTime + seconds));
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
+  }, [duration]);
+
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts when video player container is focused or hovered
+      const playerContainer = videoRef.current?.closest('.video-player-container');
+      if (!playerContainer) return;
+      
+      switch (e.key.toLowerCase()) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          seekBy(-5);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          seekBy(5);
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, toggleMute, toggleFullscreen, seekBy]);
+
   return (
-    <div className={cn('relative bg-black rounded-lg overflow-hidden group', className)}>
+    <div className={cn('relative bg-black rounded-lg overflow-hidden group video-player-container', className)} tabIndex={0}>
       <video
         ref={videoRef}
         className="w-full h-full"
@@ -253,13 +355,102 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
+              {/* Settings Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel>Video Settings</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  {/* Quality Selection */}
+                  {qualityLevels.length > 0 && (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span>Quality</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {currentQuality === -1 ? 'Auto' : qualityLevels[currentQuality]?.name || 'Auto'}
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem
+                          onClick={() => handleQualityChange(-1)}
+                          className="justify-between"
+                        >
+                          <span>Auto</span>
+                          {currentQuality === -1 && <Check className="h-4 w-4" />}
+                        </DropdownMenuItem>
+                        {qualityLevels.map((level, index) => (
+                          <DropdownMenuItem
+                            key={index}
+                            onClick={() => handleQualityChange(index)}
+                            className="justify-between"
+                          >
+                            <span>{level.name}</span>
+                            {currentQuality === index && <Check className="h-4 w-4" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  )}
+                  
+                  {/* Playback Speed */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <span>Speed</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {playbackRate}x
+                      </span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {PLAYBACK_SPEEDS.map((speed) => (
+                        <DropdownMenuItem
+                          key={speed}
+                          onClick={() => handlePlaybackRateChange(speed)}
+                          className="justify-between"
+                        >
+                          <span>{speed}x</span>
+                          {playbackRate === speed && <Check className="h-4 w-4" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Keyboard Shortcuts Info */}
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Keyboard Shortcuts
+                  </DropdownMenuLabel>
+                  <div className="px-2 py-1 text-xs text-muted-foreground space-y-1">
+                    <div className="flex justify-between">
+                      <span>Play/Pause:</span>
+                      <span>Space or K</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Mute:</span>
+                      <span>M</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Fullscreen:</span>
+                      <span>F</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Seek:</span>
+                      <span>← →</span>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Fullscreen */}
               <Button
                 size="icon"
                 variant="ghost"
