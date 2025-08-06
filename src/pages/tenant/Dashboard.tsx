@@ -143,17 +143,17 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-gray-900">
                 Streaming Dashboard
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-600">
                 Monitor your live streams and platform performance
               </p>
             </div>
@@ -183,11 +183,11 @@ const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <p className="text-sm font-medium text-gray-700">
                       {metric.title}
                     </p>
                     <div className="mt-2 flex items-baseline">
-                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      <p className="text-2xl font-semibold text-gray-900">
                         {metric.value}
                       </p>
                       <span className="ml-2 flex items-center text-sm font-medium text-green-600">
@@ -232,7 +232,7 @@ const Dashboard = () => {
             <CardContent className="space-y-4">
               {activeStreams.map((stream) => (
                 <div key={stream.id} 
-                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                      onClick={() => navigate(`/tenant/live-control`)}
                 >
                   <div className="flex items-center space-x-4">
@@ -241,10 +241,10 @@ const Dashboard = () => {
                       <span className="text-xs font-medium text-red-600 uppercase">LIVE</span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
+                      <h4 className="font-medium text-gray-900">
                         {stream.title}
                       </h4>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
                         <span>{stream.streamer}</span>
                         <span>•</span>
                         <span className="flex items-center">
@@ -270,10 +270,10 @@ const Dashboard = () => {
               {activeStreams.length === 0 && (
                 <div className="text-center py-8">
                   <PlayCircle className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
                     No active streams
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-600">
                     Start your first stream to see it here
                   </p>
                   <div className="mt-6">
@@ -333,11 +333,11 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 {upcomingStreams.map((stream) => (
-                  <div key={stream.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                  <div key={stream.id} className="p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-sm text-gray-900">
                       {stream.title}
                     </h4>
-                    <div className="mt-1 text-xs text-gray-500 space-y-1">
+                    <div className="mt-1 text-xs text-gray-600 space-y-1">
                       <div className="flex items-center justify-between">
                         <span>{stream.date} at {stream.scheduledTime}</span>
                         <Badge variant="outline" className="text-xs">

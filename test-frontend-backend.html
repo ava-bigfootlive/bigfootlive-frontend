@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigfootLive Frontend-Backend Connection Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #0a0a0a; color: #fff; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #1a4f1a; border: 1px solid #28a745; }
+        .error { background: #4f1a1a; border: 1px solid #dc3545; }
+        .info { background: #1a3a4f; border: 1px solid #17a2b8; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #log { background: #1a1a1a; padding: 15px; border-radius: 5px; min-height: 200px; overflow-y: auto; font-family: monospace; }
+        .message { margin: 5px 0; padding: 5px; border-left: 3px solid #007bff; }
+        input[type="text"] { padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 3px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 BigfootLive Connection Test</h1>
+        
+        <div id="status" class="status info">
+            <strong>Status:</strong> Initializing...
+        </div>
+
+        <div class="controls">
+            <h3>🧪 API Tests</h3>
+            <button onclick="testBackendHealth()">Test Backend Health</button>
+            <button onclick="testCreateEvent()">Test Create Event</button>
+            <button onclick="testGetEvents()">Test Get Events</button>
+            <button onclick="testStreamingConfig()">Test Streaming Config</button>
+        </div>
+
+        <div class="controls">
+            <h3>🔌 WebSocket Tests</h3>
+            <button onclick="connectWebSocket()">Connect WebSocket</button>
+            <button onclick="joinTestEvent()">Join Test Event</button>
+            <button onclick="sendTestMessage()">Send Test Message</button>
+            <button onclick="disconnectWebSocket()">Disconnect</button>
+        </div>
+
+        <div class="controls">
+            <h3>💬 Live Chat Test</h3>
+            <input type="text" id="messageInput" placeholder="Enter a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendChatMessage()">Send Message</button>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let socket = null;
+        const API_BASE = 'http://localhost:3000/api';
+        const WS_URL = 'http://localhost:3000';
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('log');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.borderLeftColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff';
+            messageDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logDiv.appendChild(messageDiv);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = `<strong>Status:</strong> ${message}`;
+        }
+
+        // API Tests
+        async function testBackendHealth() {
+            log('🚀 Testing backend health...');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                log(`✅ Backend Health: ${JSON.stringify(data)}`, 'success');
+                updateStatus('Backend is healthy!', 'success');
+            } catch (error) {
+                log(`❌ Backend Health Error: ${error.message}`, 'error');
+                updateStatus('Backend connection failed!', 'error');
+            }
+        }
+
+        async function testCreateEvent() {
+            log('🎬 Testing event creation...');
+            try {
+                const response = await fetch(`${API_BASE}/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Frontend Test Stream',
+                        description: 'Testing frontend-backend integration!',
+                        category: 'testing'
+                    })
+                });
+                const data = await response.json();
+                log(`✅ Event Created: ${JSON.stringify(data)}`, 'success');
+            } catch (error) {
+                log(`❌ Create Event Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetEvents() {
+            log('📋 Testing get events...');
+            try {
+                const response = await fetch(`${API_BASE}/events`);
+                const data = await response.json();
+                log(`✅ Events Retrieved: ${JSON.stringify(data)}`, 'success');
+            } catch (error) {
+                log(`❌ Get Events Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStreamingConfig() {
+            log('📡 Testing streaming config...');
+            try {
+                const response = await fetch(`${API_BASE}/streaming/events/test-event/stream`);
+                const data = await response.json();
+                log(`✅ Streaming Config: ${JSON.stringify(data)}`, 'success');
+            } catch (error) {
+                log(`❌ Streaming Config Error: ${error.message}`, 'error');
+            }
+        }
+
+        // WebSocket Tests
+        function connectWebSocket() {
+            log('🔌 Connecting to WebSocket...');
+            socket = io(WS_URL);
+
+            socket.on('connect', () => {
+                log('✅ WebSocket connected!', 'success');
+                updateStatus('WebSocket connected!', 'success');
+            });
+
+            socket.on('disconnect', () => {
+                log('❌ WebSocket disconnected');
+                updateStatus('WebSocket disconnected', 'error');
+            });
+
+            socket.on('joined:event', (data) => {
+                log(`🚪 Joined event: ${JSON.stringify(data)}`, 'success');
+            });
+
+            socket.on('chat:message', (data) => {
+                log(`💬 Chat message: ${JSON.stringify(data)}`, 'success');
+            });
+
+            socket.on('stream:started', (data) => {
+                log(`🎬 Stream started: ${JSON.stringify(data)}`, 'success');
+            });
+        }
+
+        function joinTestEvent() {
+            if (!socket) {
+                log('❌ WebSocket not connected!', 'error');
+                return;
+            }
+            log('🚪 Joining test event...');
+            socket.emit('join:event', { eventId: 'frontend-test-event' });
+        }
+
+        function sendTestMessage() {
+            if (!socket) {
+                log('❌ WebSocket not connected!', 'error');
+                return;
+            }
+            log('💬 Sending test message...');
+            socket.emit('chat:message', {
+                eventId: 'frontend-test-event',
+                username: 'FrontendTester',
+                message: 'Hello from the frontend! 🚀'
+            });
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            if (!socket) {
+                log('❌ WebSocket not connected!', 'error');
+                return;
+            }
+
+            log(`💬 Sending: "${message}"`);
+            socket.emit('chat:message', {
+                eventId: 'frontend-test-event',
+                username: 'LiveTester',
+                message: message
+            });
+            
+            input.value = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                log('🔌 WebSocket disconnected');
+                updateStatus('WebSocket disconnected', 'info');
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            log('🔥 BigfootLive Frontend-Backend Test Initialized!');
+            updateStatus('Ready for testing!', 'info');
+            
+            // Auto-test backend health on load
+            setTimeout(testBackendHealth, 1000);
+        };
+    </script>
+</body>
+</html>

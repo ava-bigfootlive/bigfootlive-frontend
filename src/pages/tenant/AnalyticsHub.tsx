@@ -11,8 +11,9 @@ import {
 } from 'recharts';
 import {
   Activity, TrendingUp, TrendingDown, Users, Clock, DollarSign,
-  Download, Globe, AlertCircle, CheckCircle, PlayCircle
+  Download, Globe, AlertCircle, CheckCircle, PlayCircle, Zap, Bug
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { authService } from '@/lib/auth';
 import { eventService } from '@/services/events';
 
@@ -273,6 +274,20 @@ export default function AnalyticsHub() {
               <SelectItem value="30d">Last 30 Days</SelectItem>
             </SelectContent>
           </Select>
+          <Link to="/tenant/analytics/real-time">
+            <Button variant="outline">
+              <Zap className="h-4 w-4 mr-2" />
+              Real-Time View
+            </Button>
+          </Link>
+          {import.meta.env.MODE === 'development' && (
+            <Link to="/tenant/analytics/debug">
+              <Button variant="outline" size="sm">
+                <Bug className="h-4 w-4 mr-2" />
+                Debug
+              </Button>
+            </Link>
+          )}
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Report
@@ -304,7 +319,9 @@ export default function AnalyticsHub() {
               </Badge>
             </div>
           </div>
-          <Button size="sm">View Live Dashboard</Button>
+          <Link to="/tenant/analytics/real-time">
+            <Button size="sm">View Live Dashboard</Button>
+          </Link>
         </CardContent>
       </Card>
 

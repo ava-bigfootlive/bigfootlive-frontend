@@ -22,6 +22,10 @@ import InteractiveFeatures from '@/pages/tenant/InteractiveFeatures';
 import Settings from '@/pages/tenant/Settings';
 import DocumentationArchive from '@/pages/tenant/DocumentationArchive';
 import NewSchedule from '@/pages/tenant/NewSchedule';
+import AnalyticsPerformance from '@/pages/tenant/AnalyticsPerformance';
+import AnalyticsAudience from '@/pages/tenant/AnalyticsAudience';
+import AnalyticsRealTime from '@/pages/tenant/AnalyticsRealTime';
+import AnalyticsDebug from '@/pages/tenant/AnalyticsDebug';
 import ColorTest from '@/pages/ColorTest';
 import { Toaster } from '@/components/ui/sonner';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -74,6 +78,34 @@ export default function App() {
   useEffect(() => {
     async function initializeApp() {
       await initializeTheme();
+      // Ensure light theme is applied with inline styles (highest CSS specificity)
+      const root = document.documentElement;
+      
+      // Force light theme CSS variables
+      root.style.setProperty('--background', '0 0% 100%');
+      root.style.setProperty('--foreground', '240 10% 3.9%');
+      root.style.setProperty('--card', '0 0% 100%');
+      root.style.setProperty('--card-foreground', '240 10% 3.9%');
+      root.style.setProperty('--popover', '0 0% 100%');
+      root.style.setProperty('--popover-foreground', '240 10% 3.9%');
+      root.style.setProperty('--primary', '221.2 83.2% 53.3%');
+      root.style.setProperty('--primary-foreground', '210 40% 98%');
+      root.style.setProperty('--secondary', '210 40% 96%');
+      root.style.setProperty('--secondary-foreground', '222.2 47.4% 11.2%');
+      root.style.setProperty('--muted', '210 40% 96%');
+      root.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
+      root.style.setProperty('--accent', '210 40% 96%');
+      root.style.setProperty('--accent-foreground', '222.2 47.4% 11.2%');
+      root.style.setProperty('--destructive', '0 84.2% 60.2%');
+      root.style.setProperty('--destructive-foreground', '210 40% 98%');
+      root.style.setProperty('--border', '214.3 31.8% 91.4%');
+      root.style.setProperty('--input', '214.3 31.8% 91.4%');
+      root.style.setProperty('--ring', '221.2 83.2% 53.3%');
+      
+      // Ensure proper theme class
+      root.classList.remove('dark');
+      root.classList.add('light');
+      
       await initialize();
     }
     initializeApp();
@@ -121,6 +153,10 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="analytics" element={<AnalyticsHub />} />
+            <Route path="analytics/real-time" element={<AnalyticsRealTime />} />
+            <Route path="analytics/performance" element={<AnalyticsPerformance />} />
+            <Route path="analytics/audience" element={<AnalyticsAudience />} />
+            <Route path="analytics/debug" element={<AnalyticsDebug />} />
             <Route path="live-control/*" element={<LiveControlCenter />} />
             <Route path="live/schedule/new" element={<NewSchedule />} />
             <Route path="content/*" element={<ContentLibrary />} />

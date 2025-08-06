@@ -1,0 +1,332 @@
+# BigfootLive Backend Kubernetes Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bigfootlive-backend
+  namespace: bigfootlive
+  labels:
+    app: bigfootlive-backend
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: bigfootlive-backend
+  template:
+    metadata:
+      labels:
+        app: bigfootlive-backend
+        version: v1
+    spec:
+      serviceAccountName: bigfootlive-backend
+      containers:
+      - name: backend
+        image: bigfootlive/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        - containerPort: 1935
+          name: rtmp
+        - containerPort: 8080
+          name: srs-api
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: mongodb-uri
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: redis-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: jwt-secret
+        - name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: jwt-refresh-secret
+        - name: API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: bigfootlive-config
+              key: api-url
+        - name: FRONTEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: bigfootlive-config
+              key: frontend-url
+        - name: EMAIL_FROM
+          valueFrom:
+            configMapKeyRef:
+              name: bigfootlive-config
+              key: email-from
+        - name: SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: smtp-host
+        - name: SMTP_PORT
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: smtp-port
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: smtp-user
+        - name: SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: smtp-pass
+        - name: WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bigfootlive-secrets
+              key: webhook-secret
+        - name: CONTAINER_CPU_LIMIT
+          value: "1000m"
+        - name: CONTAINER_MEMORY_LIMIT
+          value: "2Gi"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: srs-configs
+          mountPath: /app/srs-configs
+        - name: srs-data
+          mountPath: /app/srs-data
+        - name: logs
+          mountPath: /app/logs
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: srs-configs
+        emptyDir: {}
+      - name: srs-data
+        persistentVolumeClaim:
+          claimName: srs-data-pvc
+      - name: logs
+        emptyDir: {}
+      nodeSelector:
+        node-type: compute
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - bigfootlive-backend
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bigfootlive-backend-service
+  namespace: bigfootlive
+  labels:
+    app: bigfootlive-backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 1935
+    targetPort: 1935
+    protocol: TCP
+    name: rtmp
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: srs-api
+  selector:
+    app: bigfootlive-backend
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bigfootlive-backend
+  namespace: bigfootlive
+  labels:
+    app: bigfootlive-backend
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: bigfootlive-backend
+  namespace: bigfootlive
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "create", "update", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bigfootlive-backend
+  namespace: bigfootlive
+subjects:
+- kind: ServiceAccount
+  name: bigfootlive-backend
+  namespace: bigfootlive
+roleRef:
+  kind: Role
+  name: bigfootlive-backend
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: srs-data-pvc
+  namespace: bigfootlive
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bigfootlive-backend-ingress
+  namespace: bigfootlive
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "bigfootlive-backend-service"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - api.bigfootlive.com
+    secretName: bigfootlive-api-tls
+  rules:
+  - host: api.bigfootlive.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bigfootlive-backend-service
+            port:
+              number: 3000
+
+---
+# HorizontalPodAutoscaler for automatic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bigfootlive-backend-hpa
+  namespace: bigfootlive
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bigfootlive-backend
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max

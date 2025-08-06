@@ -1,0 +1,288 @@
+# BigfootLive Configuration and Secrets
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bigfootlive-config
+  namespace: bigfootlive
+  labels:
+    app: bigfootlive
+data:
+  api-url: "https://api.bigfootlive.com"
+  frontend-url: "https://bigfootlive.com"
+  email-from: "noreply@bigfootlive.com"
+  node-env: "production"
+  port: "3000"
+  container-cpu-limit: "1000m"
+  container-memory-limit: "2Gi"
+  
+  # SRS Configuration
+  srs-base-port: "1935"
+  srs-http-port: "8080"
+  srs-hls-fragment: "10"
+  srs-hls-window: "60"
+  
+  # Logging
+  log-level: "info"
+  log-format: "json"
+  
+  # Rate Limiting
+  rate-limit-window: "900000"  # 15 minutes
+  rate-limit-max: "100"
+  
+  # Cache TTL
+  cache-ttl: "3600"  # 1 hour
+  session-ttl: "86400"  # 24 hours
+
+---
+# Secrets template - values should be base64 encoded
+# Use: echo -n "your-secret-value" | base64
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bigfootlive-secrets
+  namespace: bigfootlive
+  labels:
+    app: bigfootlive
+type: Opaque
+data:
+  # Database
+  mongodb-uri: bW9uZ29kYjovL21vbmdvOnBhc3N3b3JkQG1vbmdvLWNsdXN0ZXI6MjcwMTcvYmlnZm9vdGxpdmU=
+  
+  # Redis
+  redis-url: cmVkaXM6Ly86cGFzc3dvcmRAcmVkaXMtY2x1c3Rlcjo2Mzc5
+  
+  # JWT Secrets (generate strong secrets in production)
+  jwt-secret: eW91ci1zdXBlci1zZWNyZXQtand0LWtleS1jaGFuZ2UtaW4tcHJvZHVjdGlvbg==
+  jwt-refresh-secret: eW91ci1zdXBlci1zZWNyZXQtcmVmcmVzaC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24=
+  
+  # Email/SMTP
+  smtp-host: c210cC5nbWFpbC5jb20=
+  smtp-port: NTg3
+  smtp-user: eW91ci1lbWFpbEBnbWFpbC5jb20=
+  smtp-pass: eW91ci1hcHAtcGFzc3dvcmQ=
+  
+  # Webhook
+  webhook-secret: eW91ci13ZWJob29rLXNlY3JldC1rZXk=
+  
+  # External API Keys (if needed)
+  # aws-access-key-id: ""
+  # aws-secret-access-key: ""
+  # cloudinary-api-key: ""
+  # cloudinary-api-secret: ""
+
+---
+# MongoDB Configuration (if using MongoDB Atlas or external MongoDB)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-config
+  namespace: bigfootlive
+data:
+  database-name: "bigfootlive"
+  connection-timeout: "30000"
+  socket-timeout: "30000"
+  max-pool-size: "10"
+  min-pool-size: "2"
+
+---
+# Redis Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: bigfootlive
+data:
+  max-memory: "512mb"
+  max-memory-policy: "allkeys-lru"
+  timeout: "0"
+  tcp-keepalive: "60"
+  databases: "16"
+
+---
+# SRS Configuration Template
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: srs-config-template
+  namespace: bigfootlive
+data:
+  srs-template.conf: |
+    # SRS Configuration Template for Event Containers
+    # This template is used to generate SRS configs for each event
+    
+    listen              {RTMP_PORT};
+    max_connections     1000;
+    srs_log_tank        console;
+    srs_log_level       info;
+    
+    # HTTP API
+    http_api {
+        enabled         on;
+        listen          {HTTP_API_PORT};
+        crossdomain     on;
+    }
+    
+    # HTTP Server for HLS
+    http_server {
+        enabled         on;
+        listen          {HLS_PORT};
+        dir             ./objs/nginx/html;
+    }
+    
+    # Statistics
+    stats {
+        network         0;
+        disk            sda sdb xvda xvdb;
+    }
+    
+    # WebRTC
+    rtc_server {
+        enabled         on;
+        listen          8000;
+        candidate       $CANDIDATE;
+    }
+    
+    # Vhost configuration
+    vhost __defaultVhost__ {
+        # RTMP settings
+        chunk_size      60000;
+        
+        # Authentication
+        refer {
+            enabled     on;
+            all         play publish;
+            publish     {STREAM_KEY};
+        }
+        
+        # HLS
+        hls {
+            enabled         on;
+            hls_fragment    {HLS_FRAGMENT};
+            hls_window      {HLS_WINDOW};
+            hls_path        ./objs/nginx/html/live;
+            hls_m3u8_file   [app]/[stream].m3u8;
+            hls_ts_file     [app]/[stream]-[seq].ts;
+        }
+        
+        # DVR (Recording)
+        dvr {
+            enabled      on;
+            dvr_path     ./objs/nginx/html/dvr;
+            dvr_plan     session;
+            dvr_duration 30;
+            dvr_wait_keyframe on;
+            time_jitter  full;
+        }
+        
+        # WebRTC
+        rtc {
+            enabled     on;
+            rtmp_to_rtc on;
+            rtc_to_rtmp on;
+        }
+        
+        # Webhooks for real-time events
+        http_hooks {
+            enabled         on;
+            on_connect      {WEBHOOK_URL};
+            on_close        {WEBHOOK_URL};
+            on_publish      {WEBHOOK_URL};
+            on_unpublish    {WEBHOOK_URL};
+            on_play         {WEBHOOK_URL};
+            on_stop         {WEBHOOK_URL};
+            on_dvr          {WEBHOOK_URL};
+            on_hls          {WEBHOOK_URL};
+        }
+        
+        # Security
+        security {
+            enabled         on;
+            seo_enabled     on;
+        }
+        
+        # Transcode for multiple qualities
+        transcode {
+            enabled     on;
+            ffmpeg      ./objs/ffmpeg/bin/ffmpeg;
+            
+            engine hd {
+                enabled          on;
+                vcodec           libx264;
+                vbitrate         1200;
+                vfps             25;
+                vwidth           1280;
+                vheight          720;
+                vthreads         2;
+                vprofile         main;
+                vpreset          medium;
+                acodec           aac;
+                abitrate         70;
+                asample_rate     44100;
+                achannels        2;
+                aparams {
+                    profile:a    aac_low;
+                }
+                output           rtmp://127.0.0.1:{RTMP_PORT}/live/[stream]_hd;
+            }
+            
+            engine sd {
+                enabled          on;
+                vcodec           libx264;
+                vbitrate         800;
+                vfps             25;
+                vwidth           854;
+                vheight          480;
+                vthreads         1;
+                vprofile         baseline;
+                vpreset          faster;
+                acodec           aac;
+                abitrate         60;
+                asample_rate     44100;
+                achannels        2;
+                output           rtmp://127.0.0.1:{RTMP_PORT}/live/[stream]_sd;
+            }
+        }
+    }
+
+---
+# Network Policy (optional - for security)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bigfootlive-network-policy
+  namespace: bigfootlive
+spec:
+  podSelector:
+    matchLabels:
+      app: bigfootlive-backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: nginx-ingress
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 3000
+    - protocol: TCP
+      port: 1935
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 27017  # MongoDB
+    - protocol: TCP
+      port: 6379   # Redis
+    - protocol: TCP
+      port: 443    # HTTPS
+    - protocol: TCP
+      port: 53     # DNS
+    - protocol: UDP
+      port: 53     # DNS

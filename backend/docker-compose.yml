@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bigfootlive-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/bigfootlive
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-in-production
+      - API_URL=http://localhost:3000
+      - FRONTEND_URL=http://localhost:5173
+      - EMAIL_FROM=noreply@bigfootlive.com
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your-email@gmail.com
+      - SMTP_PASS=your-app-password
+      - WEBHOOK_SECRET=your-webhook-secret-key
+      - CONTAINER_CPU_LIMIT=1000m
+      - CONTAINER_MEMORY_LIMIT=2Gi
+    volumes:
+      - ./srs-configs:/app/srs-configs
+      - srs-data:/app/srs-data
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - bigfootlive
+
+  # MongoDB database
+  mongo:
+    image: mongo:6.0
+    container_name: bigfootlive-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=bigfootlive
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - bigfootlive
+
+  # Redis cache and session store
+  redis:
+    image: redis:7-alpine
+    container_name: bigfootlive-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - bigfootlive
+
+  # SRS base image (for pre-built SRS instances)
+  srs-base:
+    image: ossrs/srs:5
+    container_name: bigfootlive-srs-base
+    # This service is used as a base for dynamic SRS instances
+    # Each event will spawn its own SRS container based on this image
+    profiles:
+      - base-only  # This prevents it from starting automatically
+
+  # Nginx reverse proxy and CDN
+  nginx:
+    image: nginx:alpine
+    container_name: bigfootlive-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - srs-data:/var/www/html:ro
+    depends_on:
+      - backend
+    networks:
+      - bigfootlive
+
+  # Redis Insight for development (optional)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: bigfootlive-redis-insight
+    ports:
+      - "8001:8001"
+    profiles:
+      - dev
+    networks:
+      - bigfootlive
+
+  # MongoDB Express for development (optional)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: bigfootlive-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+    depends_on:
+      - mongo
+    profiles:
+      - dev
+    networks:
+      - bigfootlive
+
+volumes:
+  mongo-data:
+  redis-data:
+  srs-data:
+
+networks:
+  bigfootlive:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

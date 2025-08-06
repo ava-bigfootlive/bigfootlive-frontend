@@ -1,8 +1,8 @@
-// API Configuration
+// BigfootLive API Configuration
 const API_ENDPOINTS = {
-  production: 'https://api.bigfootlive.io',
-  development: 'https://dev.bigfootlive.io',
-  local: 'http://localhost:8001'
+  production: 'https://api.bigfootlive.com',
+  development: 'https://dev.bigfootlive.com',
+  local: 'http://localhost:3000/api'
 };
 
 // Determine the API URL based on the environment

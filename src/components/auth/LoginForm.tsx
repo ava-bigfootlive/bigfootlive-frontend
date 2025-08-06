@@ -30,7 +30,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   // Form state
   const [formData, setFormData] = useState<AuthRequest>({
-    email: '',
+    identifier: '', // Using identifier instead of email for backend compatibility
     password: '',
     rememberMe: false
   });
@@ -79,10 +79,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const validateForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
     
-    if (!formData.email?.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+    if (!formData.identifier?.trim()) {
+      errors.identifier = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier)) {
+      errors.identifier = 'Please enter a valid email address';
     }
     
     if (!formData.password) {
@@ -243,19 +243,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   Email Address
                 </label>
                 <input
-                  id="email"
-                  name="email"
+                  id="identifier"
+                  name="identifier"
                   type="email"
-                  value={formData.email}
+                  value={formData.identifier}
                   onChange={handleInputChange}
-                  className={`login-form__input ${validationErrors.email ? 'login-form__input--error' : ''}`}
+                  className={`login-form__input ${validationErrors.identifier ? 'login-form__input--error' : ''}`}
                   placeholder="Enter your email"
                   disabled={isLoading || isLocked}
                   autoComplete="email"
                   required
                 />
-                {validationErrors.email && (
-                  <span className="login-form__field-error">{validationErrors.email}</span>
+                {validationErrors.identifier && (
+                  <span className="login-form__field-error">{validationErrors.identifier}</span>
                 )}
               </div>
 

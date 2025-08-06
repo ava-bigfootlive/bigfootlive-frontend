@@ -86,7 +86,7 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ 'Live Control Center': true });
 
   const toggleSection = (sectionName: string) => {
     setExpandedSections(prev => ({

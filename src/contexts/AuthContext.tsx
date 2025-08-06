@@ -265,23 +265,52 @@ export interface AuthContextType extends AuthState {
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth API service (this would typically connect to your backend)
+// Auth API service (connects to backend)
 class AuthService {
-  private baseUrl = process.env.REACT_APP_API_URL || '/api';
+  private baseUrl = import.meta.env.VITE_API_URL || process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
   
   async login(request: AuthRequest): Promise<AuthResponse> {
     const response = await fetch(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request)
+      body: JSON.stringify({
+        email: request.identifier,
+        password: request.password,
+        deviceId: request.deviceId,
+        rememberMe: request.rememberMe
+      })
     });
     
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
+      throw new Error(data.error || 'Login failed');
     }
     
-    return response.json();
+    // Transform backend response to match frontend interface
+    return {
+      success: data.success,
+      user: data.user ? {
+        ...data.user,
+        currentSession: {
+          id: 'temp-session', // Backend doesn't return session in login response
+          userId: data.user.id,
+          token: data.token,
+          ipAddress: '',
+          userAgent: navigator.userAgent,
+          device: request.deviceId || '',
+          expiresAt: new Date(Date.now() + (data.expiresIn * 1000))
+        }
+      } : undefined,
+      token: data.token,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn,
+      requiresMFA: data.requiresMFA,
+      mfaMethods: data.mfaMethods,
+      mfaChallengeId: data.mfaChallengeId,
+      error: data.error,
+      errorCode: data.errorCode
+    };
   }
   
   async logout(sessionId: string): Promise<void> {
@@ -302,11 +331,30 @@ class AuthService {
       body: JSON.stringify({ refreshToken })
     });
     
+    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error('Token refresh failed');
+      throw new Error(data.error || 'Token refresh failed');
     }
     
-    return response.json();
+    // Transform backend response to match frontend interface
+    return {
+      success: data.success,
+      user: data.user ? {
+        ...data.user,
+        currentSession: {
+          id: 'refreshed-session',
+          userId: data.user.id,
+          token: data.token,
+          ipAddress: '',
+          userAgent: navigator.userAgent,
+          device: '',
+          expiresAt: new Date(Date.now() + (data.expiresIn * 1000))
+        }
+      } : undefined,
+      token: data.token,
+      expiresIn: data.expiresIn
+    };
   }
   
   async setupMFA(userId: string, method: MFAMethod['type']): Promise<{ secret?: string; qrCode?: string; backupCodes?: string[] }> {
@@ -334,8 +382,17 @@ class AuthService {
   }
   
   async getSSOProviders(): Promise<SSOProvider[]> {
-    const response = await fetch(`${this.baseUrl}/auth/sso/providers`);
-    return response.json();
+    try {
+      const response = await fetch(`${this.baseUrl}/tenant/sso-providers`);
+      if (!response.ok) {
+        // If endpoint doesn't exist, return empty array
+        return [];
+      }
+      return response.json();
+    } catch (error) {
+      console.warn('Failed to load SSO providers:', error);
+      return [];
+    }
   }
   
   async initiateSSO(providerId: string, returnUrl?: string): Promise<{ redirectUrl: string }> {
