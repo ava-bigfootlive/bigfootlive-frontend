@@ -37,9 +37,9 @@ export default function StreamViewer() {
   }, [fetchStreamDetails]);
 
   const getStreamUrl = () => {
-    // In production, this would be the actual MediaMTX HLS URL
-    const baseUrl = import.meta.env.VITE_STREAM_URL || 'https://stream.bigfootlive.io';
-    return `${baseUrl}/hls/live/${stream?.tenant_id}/${stream?.stream_key}/index.m3u8`;
+    // Use the new NGINX streaming proxy for HLS delivery
+    const baseUrl = import.meta.env.VITE_STREAMING_URL || 'http://localhost:8090';
+    return `${baseUrl}/live/${streamId}/master.m3u8`;
   };
 
   if (loading) {

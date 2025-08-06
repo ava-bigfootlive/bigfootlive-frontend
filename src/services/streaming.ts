@@ -297,6 +297,129 @@ class StreamingService {
       ];
     }
   }
+
+  /**
+   * NEW STREAMING INFRASTRUCTURE METHODS
+   */
+
+  /**
+   * Get HLS playlist URL from the new NGINX streaming proxy
+   */
+  getHLSPlaylistUrl(streamId: string): string {
+    const baseUrl = import.meta.env.VITE_STREAMING_URL || 'http://localhost:8090';
+    return `${baseUrl}/live/${streamId}/master.m3u8`;
+  }
+
+  /**
+   * Get RTMP ingestion URL from SRS server
+   */
+  getRTMPIngestUrl(streamId: string): string {
+    const baseUrl = import.meta.env.VITE_SRS_URL || 'rtmp://localhost:1935';
+    return `${baseUrl}/live/${streamId}`;
+  }
+
+  /**
+   * Get stream health from SRS API
+   */
+  async getStreamHealth(streamId: string): Promise<{
+    status: 'online' | 'offline';
+    viewers: number;
+    bitrate: number;
+    fps: number;
+    uptime: number;
+  }> {
+    try {
+      const response = await api.get(`/streaming/health/${streamId}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to get stream health:', error);
+      throw new Error('Failed to get stream health');
+    }
+  }
+
+  /**
+   * Get current viewer count for a stream
+   */
+  async getStreamViewers(streamId: string): Promise<{
+    current: number;
+    peak: number;
+    total: number;
+  }> {
+    try {
+      const response = await api.get(`/streaming/viewers/${streamId}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to get stream viewers:', error);
+      return { current: 0, peak: 0, total: 0 };
+    }
+  }
+
+  /**
+   * Start a new stream
+   */
+  async startStream(eventId: string, config: {
+    title: string;
+    description?: string;
+    quality: '720p' | '1080p' | '4K';
+    recordingEnabled: boolean;
+  }): Promise<{
+    streamId: string;
+    rtmpUrl: string;
+    hlsUrl: string;
+    streamKey: string;
+  }> {
+    try {
+      const response = await api.post(`/streaming/start/${eventId}`, config);
+      return {
+        streamId: response.streamId,
+        rtmpUrl: this.getRTMPIngestUrl(response.streamId),
+        hlsUrl: this.getHLSPlaylistUrl(response.streamId),
+        streamKey: response.streamId
+      };
+    } catch (error) {
+      console.error('Failed to start stream:', error);
+      throw new Error('Failed to start stream');
+    }
+  }
+
+  /**
+   * Stop a stream
+   */
+  async stopStream(streamId: string): Promise<{
+    duration: number;
+    viewerStats: { peak: number; total: number };
+    recordingUrl?: string;
+  }> {
+    try {
+      const response = await api.post(`/streaming/stop/${streamId}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to stop stream:', error);
+      throw new Error('Failed to stop stream');
+    }
+  }
+
+  /**
+   * Get FFmpeg processing job status
+   */
+  async getProcessingStatus(jobId: string): Promise<{
+    status: 'processing' | 'completed' | 'failed';
+    progress: number;
+    outputUrl?: string;
+    error?: string;
+  }> {
+    try {
+      const ffmpegUrl = import.meta.env.VITE_FFMPEG_URL || 'http://localhost:3000';
+      const response = await fetch(`${ffmpegUrl}/jobs/${jobId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get processing status:', error);
+      throw new Error('Failed to get processing status');
+    }
+  }
 }
 
 export const streamingService = StreamingService.getInstance();

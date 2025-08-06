@@ -27,6 +27,7 @@ import AnalyticsAudience from '@/pages/tenant/AnalyticsAudience';
 import AnalyticsRealTime from '@/pages/tenant/AnalyticsRealTime';
 import AnalyticsDebug from '@/pages/tenant/AnalyticsDebug';
 import ColorTest from '@/pages/ColorTest';
+import StreamingTest from '@/pages/StreamingTest';
 import { Toaster } from '@/components/ui/sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import { initializeTheme } from '@/lib/themes';
@@ -167,6 +168,7 @@ export default function App() {
           </Route>
           <Route path="/dashboard" element={<ProtectedRoute><Navigate to="/dashboard/streams" replace /></ProtectedRoute>} />
           <Route path="/color-test" element={<ColorTest />} />
+          <Route path="/streaming-test" element={<StreamingTest />} />
         </Routes>
       </Router>
       <Toaster position="bottom-right" richColors closeButton />
