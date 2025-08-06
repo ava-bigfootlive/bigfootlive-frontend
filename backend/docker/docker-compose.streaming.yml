@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # SRS Media Server for RTMP ingestion and HLS delivery
+  srs:
+    build:
+      context: ./srs
+      dockerfile: Dockerfile
+    container_name: bigfootlive-srs
+    ports:
+      - "1935:1935"   # RTMP ingestion
+      - "8080:8080"   # HTTP API
+      - "8081:8081"   # HLS delivery
+      - "1985:1985"   # HTTP server (alternative)
+      - "8000:8000"   # WebRTC
+    volumes:
+      - srs_recordings:/usr/local/srs/recordings
+      - srs_hls:/usr/local/srs/objs/nginx/html/live
+      - ./srs/logs:/var/log/srs
+    environment:
+      - CANDIDATE=192.168.1.100  # Update with actual server IP
+      - SRS_LOG_LEVEL=info
+    networks:
+      - streaming_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/summaries"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Redis for caching streaming data and session management  
+  redis-streaming:
+    image: redis:7-alpine
+    container_name: bigfootlive-redis-streaming
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_streaming_data:/data
+    networks:
+      - streaming_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # MongoDB for streaming metadata and events
+  mongodb-streaming:
+    image: mongo:6
+    container_name: bigfootlive-mongodb-streaming
+    ports:
+      - "27018:27017"  # Different port to avoid conflicts
+    volumes:
+      - mongodb_streaming_data:/data/db
+      - ./mongo/init-streaming.js:/docker-entrypoint-initdb.d/init-streaming.js
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=bigfootlive2024
+      - MONGO_INITDB_DATABASE=bigfootlive_streaming
+    networks:
+      - streaming_network
+    restart: unless-stopped
+
+  # NGINX for load balancing and SSL termination
+  nginx-streaming:
+    image: nginx:alpine
+    container_name: bigfootlive-nginx-streaming
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - srs_hls:/usr/share/nginx/html/live:ro
+    depends_on:
+      - srs
+    networks:
+      - streaming_network
+    restart: unless-stopped
+
+  # FFmpeg service for advanced video processing
+  ffmpeg-processor:
+    build:
+      context: ./ffmpeg
+      dockerfile: Dockerfile
+    container_name: bigfootlive-ffmpeg
+    volumes:
+      - srs_recordings:/input
+      - processed_videos:/output
+      - ./ffmpeg/scripts:/scripts
+    environment:
+      - INPUT_DIR=/input
+      - OUTPUT_DIR=/output
+    networks:
+      - streaming_network
+    restart: unless-stopped
+    depends_on:
+      - srs
+
+  # Analytics collector for streaming metrics
+  analytics-collector:
+    build:
+      context: ../src
+      dockerfile: analytics.Dockerfile
+    container_name: bigfootlive-analytics
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis-streaming:6379
+      - MONGODB_URL=mongodb://admin:bigfootlive2024@mongodb-streaming:27017/bigfootlive_streaming?authSource=admin
+      - SRS_API_URL=http://srs:8080/api/v1
+    volumes:
+      - analytics_logs:/app/logs
+    networks:
+      - streaming_network
+    restart: unless-stopped
+    depends_on:
+      - redis-streaming
+      - mongodb-streaming
+      - srs
+
+volumes:
+  srs_recordings:
+    driver: local
+  srs_hls:
+    driver: local  
+  redis_streaming_data:
+    driver: local
+  mongodb_streaming_data:
+    driver: local
+  processed_videos:
+    driver: local
+  analytics_logs:
+    driver: local
+
+networks:
+  streaming_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

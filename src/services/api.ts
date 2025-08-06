@@ -5,7 +5,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -88,44 +88,14 @@ class ApiService {
     return response.data;
   }
 
-  // Events API
+  // Legacy Events API (keeping for backward compatibility)
   async getEvents() {
     const response = await this.api.get('/events');
     return response.data;
   }
 
-  async createEvent(eventData: {
-    title: string;
-    description?: string;
-    category: string;
-    scheduledStart?: Date;
-  }) {
-    const response = await this.api.post('/events', eventData);
-    return response.data;
-  }
-
-  async getEvent(eventId: string) {
-    const response = await this.api.get(`/events/${eventId}`);
-    return response.data;
-  }
-
-  async updateEvent(eventId: string, eventData: any) {
-    const response = await this.api.put(`/events/${eventId}`, eventData);
-    return response.data;
-  }
-
   async deleteEvent(eventId: string) {
     const response = await this.api.delete(`/events/${eventId}`);
-    return response.data;
-  }
-
-  async startEvent(eventId: string) {
-    const response = await this.api.post(`/events/${eventId}/start`);
-    return response.data;
-  }
-
-  async stopEvent(eventId: string) {
-    const response = await this.api.post(`/events/${eventId}/stop`);
     return response.data;
   }
 
@@ -351,6 +321,49 @@ class ApiService {
 
   async updateTenantFeatureFlags(tenantId: string, flags: any) {
     const response = await this.api.put(`/admin/tenants/${tenantId}/features`, flags);
+    return response.data;
+  }
+
+  // Streaming API Methods
+  async createEvent(eventData: {
+    title: string;
+    description?: string;
+    category: string;
+    privacy?: 'public' | 'unlisted' | 'private';
+    scheduledStart?: Date;
+    settings?: any;
+  }) {
+    const response = await this.api.post('/streaming/events', eventData);
+    return response.data;
+  }
+
+  async getEvent(eventId: string) {
+    const response = await this.api.get(`/streaming/events/${eventId}`);
+    return response.data;
+  }
+
+  async startEvent(eventId: string) {
+    const response = await this.api.post(`/streaming/events/${eventId}/start`);
+    return response.data;
+  }
+
+  async stopEvent(eventId: string) {
+    const response = await this.api.post(`/streaming/events/${eventId}/stop`);
+    return response.data;
+  }
+
+  async getStreamingConfig(eventId: string) {
+    const response = await this.api.get(`/streaming/events/${eventId}/config`);
+    return response.data;
+  }
+
+  async getStreamStats(eventId: string) {
+    const response = await this.api.get(`/streaming/events/${eventId}/stats`);
+    return response.data;
+  }
+
+  async updateEvent(eventId: string, eventData: any) {
+    const response = await this.api.put(`/streaming/events/${eventId}`, eventData);
     return response.data;
   }
 

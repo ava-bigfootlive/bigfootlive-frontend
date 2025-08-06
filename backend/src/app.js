@@ -13,6 +13,7 @@ const { apiRateLimit } = require('./middleware/auth');
 // Import routes
 const authRoutes = require('./routes/auth');
 const tenantRoutes = require('./routes/tenant');
+const streamingRoutes = require('./routes/streaming');
 
 // Import models to ensure they're registered
 require('./models');
@@ -86,6 +87,7 @@ class App {
     // API routes
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/tenant', tenantRoutes);
+    this.app.use('/api/streaming', streamingRoutes);
 
     // Serve React app in production
     if (config.server.env === 'production') {
