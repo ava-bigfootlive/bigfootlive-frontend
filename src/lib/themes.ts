@@ -107,12 +107,13 @@ export function getCurrentTheme(): 'dark' | 'light' {
   if (prefersDark) {
     return 'dark';
   }
-  // Default to dark theme
-  return 'dark';
+  // Default to light theme
+  return 'light';
 }
 
 // Initialize theme on load
 export function initializeTheme() {
-  const theme = getCurrentTheme();
-  applyTheme(theme);
+  // Force light theme by clearing any stored preference
+  localStorage.removeItem('bigfootlive-theme');
+  applyTheme('light');
 }

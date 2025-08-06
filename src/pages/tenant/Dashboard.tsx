@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,342 +11,398 @@ import {
   Clock,
   BarChart3,
   ArrowUp,
-  ArrowDown,
+  Eye,
+  Server,
+  Monitor,
+  PlayCircle,
   Calendar,
-  Play,
-  Activity,
-  AlertCircle,
-  CheckCircle,
-  Zap,
   Settings,
-  ExternalLink
+  Zap
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { streamingService, type ContainerStatus } from '@/services/streaming';
-import { analyticsService } from '@/services/analyticsService';
-import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
-  const [liveStreams, setLiveStreams] = useState<ContainerStatus[]>([]);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
-  // Fetch real streaming and analytics data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Get analytics data for today
-        const today = new Date();
-        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-        const filter = {
-          dateRange: { start: yesterday, end: today }
-        };
-        
-        const analytics = await analyticsService.getHistoricalAnalytics('default-channel', filter);
-        setAnalyticsData(analytics);
-        
-        // Mock active containers data (in real app, would fetch from API)
-        const mockLiveStreams: ContainerStatus[] = [
-          {
-            container_id: 'container_1',
-            status: 'running',
-            health: 'healthy',
-            uptime: '02:15:30',
-            metrics: {
-              cpu_usage: '35%',
-              memory_usage: '1.2GB',
-              network_in: '12.5 MB/s',
-              network_out: '45.2 MB/s',
-              active_connections: '5234'
-            }
-          },
-          {
-            container_id: 'container_2', 
-            status: 'running',
-            health: 'healthy',
-            uptime: '00:45:12',
-            metrics: {
-              cpu_usage: '28%',
-              memory_usage: '896MB',
-              network_in: '8.1 MB/s',
-              network_out: '28.7 MB/s',
-              active_connections: '1823'
-            }
-          },
-          {
-            container_id: 'container_3',
-            status: 'running', 
-            health: 'healthy',
-            uptime: '01:30:45',
-            metrics: {
-              cpu_usage: '42%',
-              memory_usage: '1.8GB',
-              network_in: '18.3 MB/s',
-              network_out: '67.1 MB/s',
-              active_connections: '8421'
-            }
-          }
-        ];
-        setLiveStreams(mockLiveStreams);
-        
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        toast({
-          title: 'Error loading dashboard',
-          description: 'Failed to load real-time data. Showing sample data.',
-          variant: 'destructive'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDashboardData();
-    
-    // Refresh data every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, [toast]);
+  const navigate = useNavigate();
   
-  // Calculate real metrics from data
-  const totalViewers = liveStreams.reduce((sum, stream) => sum + parseInt(stream.metrics.active_connections), 0);
-  const activeStreamCount = liveStreams.filter(s => s.status === 'running').length;
-  const todayRevenue = analyticsData?.aggregated?.totalRevenue || 0;
-  const avgWatchTime = analyticsData?.aggregated?.averageWatchTime || 0;
-  
+  // Real-time streaming metrics
   const metrics = [
     {
       title: 'Live Viewers',
-      value: totalViewers.toLocaleString(),
+      value: '15,478',
       change: '+12.5%',
-      trend: 'up' as const,
-      icon: Users,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      trend: 'up',
+      icon: Eye,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
     },
     {
       title: 'Active Streams',
-      value: activeStreamCount.toString(),
-      change: `+${activeStreamCount}`,
-      trend: 'up' as const,
+      value: '3',
+      change: '+3',
+      trend: 'up', 
       icon: Radio,
-      color: 'text-red-500',
-      bgColor: 'bg-red-500/10',
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
     },
     {
       title: 'Revenue Today',
-      value: `$${todayRevenue.toLocaleString()}`,
+      value: '$15,600',
       change: '+18.2%',
-      trend: 'up' as const,
+      trend: 'up',
       icon: DollarSign,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
     },
     {
       title: 'Avg Watch Time',
-      value: `${Math.round(avgWatchTime)} min`,
-      change: '-5.1%',
-      trend: 'down' as const,
+      value: '42 min',
+      change: '+8.3%',
+      trend: 'up',
       icon: Clock,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
-    },
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+    }
   ];
 
+  // Live streaming sessions
   const activeStreams = [
-    { id: 1, title: 'Gaming Marathon 2024', viewers: 5234, duration: '2h 15m', status: 'live', container: liveStreams[0] },
-    { id: 2, title: 'Tech Talk Tuesday', viewers: 1823, duration: '45m', status: 'live', container: liveStreams[1] },
-    { id: 3, title: 'Music Concert Live', viewers: 8421, duration: '1h 30m', status: 'live', container: liveStreams[2] },
-  ].filter(stream => stream.container); // Only show streams with active containers
-
-  const upcomingEvents = [
-    { id: 1, title: 'Developer Conference', time: '2:00 PM', date: 'Today' },
-    { id: 2, title: 'Product Launch', time: '10:00 AM', date: 'Tomorrow' },
-    { id: 3, title: 'Community Q&A', time: '4:00 PM', date: 'Mar 15' },
+    {
+      id: 'stream_1',
+      title: 'Gaming Marathon 2024',
+      streamer: 'ProGamer_Mike',
+      viewers: 5234,
+      duration: '2h 15m',
+      status: 'live',
+      category: 'Gaming',
+      quality: '1080p60',
+      health: 'excellent'
+    },
+    {
+      id: 'stream_2', 
+      title: 'Tech Talk Tuesday',
+      streamer: 'DevMaster_Jane',
+      viewers: 1823,
+      duration: '45m',
+      status: 'live',
+      category: 'Technology', 
+      quality: '720p30',
+      health: 'good'
+    },
+    {
+      id: 'stream_3',
+      title: 'Music Concert Live',
+      streamer: 'ArtistStudio',
+      viewers: 8421,
+      duration: '1h 30m', 
+      status: 'live',
+      category: 'Music',
+      quality: '1080p30',
+      health: 'excellent'
+    }
   ];
+  
+  // Upcoming scheduled streams
+  const upcomingStreams = [
+    {
+      id: 'upcoming_1',
+      title: 'Developer Conference Keynote',
+      streamer: 'TechCorp',
+      scheduledTime: '2:00 PM',
+      date: 'Today',
+      expectedViewers: '10K+',
+      category: 'Technology'
+    },
+    {
+      id: 'upcoming_2', 
+      title: 'Product Launch Event',
+      streamer: 'StartupXYZ',
+      scheduledTime: '10:00 AM',
+      date: 'Tomorrow',
+      expectedViewers: '5K+',
+      category: 'Business'
+    }
+  ];
+
+  const getHealthColor = (health: string) => {
+    switch (health) {
+      case 'excellent': return 'text-green-600';
+      case 'good': return 'text-blue-600';
+      case 'poor': return 'text-yellow-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getHealthIcon = (health: string) => {
+    switch (health) {
+      case 'excellent': return '🟢';
+      case 'good': return '🔵';
+      case 'poor': return '🟡';
+      default: return '⚫';
+    }
+  };
 
   return (
-    <div className="space-y-6 fade-in">
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-description">Welcome back! Here's what's happening with your streams today.</p>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="flex gap-4 mb-6">
-        <Link to="/tenant/live-control">
-          <Button className="action-button bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-lg">
-            <Radio className="mr-2 h-4 w-4" />
-            Go Live Now
-          </Button>
-        </Link>
-        <Link to="/tenant/content">
-          <Button variant="outline" className="action-button">
-            <Video className="mr-2 h-4 w-4" />
-            Upload Content
-          </Button>
-        </Link>
-        <Link to="/tenant/analytics">
-          <Button variant="outline" className="action-button">
-            <BarChart3 className="mr-2 h-4 w-4" />
-            View Analytics
-          </Button>
-        </Link>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="metric-grid">
-        {metrics.map((metric, index) => (
-          <Card key={index} className="enhanced-card metric-card hover-lift">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {metric.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg ${metric.bgColor}`}>
-                <metric.icon className={`h-4 w-4 ${metric.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metric.value}</div>
-              <div className="flex items-center gap-1 mt-1">
-                {metric.trend === 'up' ? (
-                  <ArrowUp className="h-3 w-3 text-green-500" />
-                ) : (
-                  <ArrowDown className="h-3 w-3 text-red-500" />
-                )}
-                <span className={`text-xs ${metric.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {metric.change}
-                </span>
-                <span className="text-xs text-muted-foreground">from last period</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Active Streams */}
-        <Card className="enhanced-card">
-          <CardHeader className="panel-header">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="section-title">Active Streams</CardTitle>
-              <CardDescription>Currently broadcasting</CardDescription>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Streaming Dashboard
+              </h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Monitor your live streams and platform performance
+              </p>
             </div>
-            <Link to="/tenant/live-control">
-              <Button variant="ghost" size="sm">View All</Button>
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activeStreams.map((stream) => (
-              <Link key={stream.id} to={`/tenant/live-control/stream/${stream.container?.container_id}`}>
-                <div className="panel p-4 hover-glow cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <h4 className="font-medium">{stream.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {parseInt(stream.container?.metrics.active_connections || '0').toLocaleString()} viewers
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {stream.container?.uptime}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Activity className="h-3 w-3" />
-                          {stream.container?.metrics.cpu_usage} CPU
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        {stream.container?.health === 'healthy' ? (
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <AlertCircle className="h-3 w-3 text-yellow-500" />
-                        )}
-                        <span className="text-xs capitalize">{stream.container?.health}</span>
-                      </div>
-                      <Badge className="status-live">
-                        <Radio className="h-3 w-3 mr-1" />
-                        LIVE
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Events */}
-        <Card className="enhanced-card">
-          <CardHeader className="panel-header">
-            <div>
-              <CardTitle className="section-title">Upcoming Events</CardTitle>
-              <CardDescription>Scheduled streams</CardDescription>
-            </div>
-            <Link to="/tenant/content">
-              <Button variant="ghost" size="sm">Schedule</Button>
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {upcomingEvents.map((event) => (
-              <div key={event.id} className="panel p-4 hover-glow cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">{event.title}</h4>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>{event.date} at {event.time}</span>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="hover-lift">
-                    <Play className="h-3 w-3 mr-1" />
-                    Start
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Performance Overview */}
-      <Card className="enhanced-card">
-        <CardHeader>
-          <CardTitle className="section-title">Performance Overview</CardTitle>
-          <CardDescription>Stream health and quality metrics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Stream Quality</span>
-                <span className="text-sm text-muted-foreground">Excellent</span>
-              </div>
-              <Progress value={92} className="h-2" />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Viewer Engagement</span>
-                <span className="text-sm text-muted-foreground">78%</span>
-              </div>
-              <Progress value={78} className="h-2" />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Server Load</span>
-                <span className="text-sm text-muted-foreground">45%</span>
-              </div>
-              <Progress value={45} className="h-2" />
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => navigate('/tenant/live-control')}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Radio className="mr-2 h-4 w-4" />
+                Go Live
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/tenant/analytics')}
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {metrics.map((metric, index) => (
+            <Card key={index} className="relative overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      {metric.title}
+                    </p>
+                    <div className="mt-2 flex items-baseline">
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                        {metric.value}
+                      </p>
+                      <span className="ml-2 flex items-center text-sm font-medium text-green-600">
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                        {metric.change}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={cn("p-3 rounded-lg", metric.bgColor)}>
+                    <metric.icon className={cn("h-6 w-6", metric.color)} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Active Streams */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Radio className="h-5 w-5 text-red-600" />
+                    Active Streams
+                  </CardTitle>
+                  <CardDescription>
+                    Currently broadcasting to {metrics[0].value} viewers
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/tenant/live-control')}
+                >
+                  Manage All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {activeStreams.map((stream) => (
+                <div key={stream.id} 
+                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                     onClick={() => navigate(`/tenant/live-control`)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-medium text-red-600 uppercase">LIVE</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        {stream.title}
+                      </h4>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <span>{stream.streamer}</span>
+                        <span>•</span>
+                        <span className="flex items-center">
+                          <Users className="h-3 w-3 mr-1" />
+                          {stream.viewers.toLocaleString()}
+                        </span>
+                        <span>•</span>
+                        <span>{stream.duration}</span>
+                        <span>•</span>
+                        <span>{stream.quality}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={cn("text-xs", getHealthColor(stream.health))}>
+                      {getHealthIcon(stream.health)} {stream.health}
+                    </span>
+                    <Badge variant="secondary">{stream.category}</Badge>
+                  </div>
+                </div>
+              ))}
+              
+              {activeStreams.length === 0 && (
+                <div className="text-center py-8">
+                  <PlayCircle className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                    No active streams
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Start your first stream to see it here
+                  </p>
+                  <div className="mt-6">
+                    <Button onClick={() => navigate('/tenant/live-control')}>
+                      <Radio className="mr-2 h-4 w-4" />
+                      Start Streaming
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Right Sidebar */}
+          <div className="space-y-6">
+            
+            {/* System Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="h-5 w-5 text-blue-600" />
+                  System Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Server Health</span>
+                    <span className="text-green-600 font-medium">94%</span>
+                  </div>
+                  <Progress value={94} className="h-2" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Bandwidth Usage</span>
+                    <span className="font-medium">2.5 GB</span>
+                  </div>
+                  <Progress value={42} className="h-2" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Storage Used</span>
+                    <span className="font-medium">68%</span>
+                  </div>
+                  <Progress value={68} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Streams */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                  Upcoming Streams
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {upcomingStreams.map((stream) => (
+                  <div key={stream.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                      {stream.title}
+                    </h4>
+                    <div className="mt-1 text-xs text-gray-500 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span>{stream.date} at {stream.scheduledTime}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {stream.category}
+                        </Badge>
+                      </div>
+                      <div>Expected: {stream.expectedViewers} viewers</div>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-3"
+                  onClick={() => navigate('/tenant/content')}
+                >
+                  <Calendar className="mr-2 h-3 w-3" />
+                  Schedule New Stream
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/tenant/content')}
+                >
+                  <Video className="mr-2 h-4 w-4" />
+                  Upload Content
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/tenant/interactive')}
+                >
+                  <Monitor className="mr-2 h-4 w-4" />
+                  Interactive Features
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/tenant/settings')}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

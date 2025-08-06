@@ -6,48 +6,7 @@
     background: hsl(var(--background));
   }
 
-  /* Sidebar Styling */
-  .sidebar {
-    background: hsl(var(--card) / 50%);
-    backdrop-filter: blur(12px);
-    border-right: 1px solid hsl(var(--border) / 50%);
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%);
-  }
-
-  .sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid hsl(var(--border) / 30%);
-  }
-
-  .sidebar-nav {
-    padding: 0.75rem;
-  }
-
-  .sidebar-nav > * + * {
-    margin-top: 0.25rem;
-  }
-
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.625rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-
-  .sidebar-item:hover {
-    background: hsl(var(--accent) / 10%);
-    color: hsl(var(--accent-foreground));
-  }
-
-  .sidebar-item-active {
-    background: hsl(var(--primary) / 10%);
-    color: hsl(var(--primary));
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
-  }
+  /* Sidebar styling removed - using component-level styling */
 
   /* Header Enhancement */
   .main-header {
